@@ -36,3 +36,4 @@ this configuration must be set for that field as described in <a href='https://p
 3. Click “Install” for the “AltTextGpt” module (on the “Site” tab). 
 
 
+![screenshot of the module interface](screenshot.png)

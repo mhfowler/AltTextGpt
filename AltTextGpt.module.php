@@ -10,8 +10,6 @@
  *
  */
 
- use GuzzleHttp\Client;
-
 class AltTextGpt extends Process implements ConfigurableModule {
 
 	/**
@@ -193,14 +191,8 @@ class AltTextGpt extends Process implements ConfigurableModule {
 
 	// Function to generate alt text using OpenAI's API
     protected function generateAltText($apiKey, $model, $prompt, $imageUrl) {
-        // Initialize Guzzle client
-        $client = new Client([
-            'base_uri' => 'https://api.openai.com/v1/',
-            'headers' => [
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json'
-            ]
-        ]);
+         // Initialize WireHttp
+        $http = new WireHttp();
 
         // Prepare the payload
         $fullPrompt = $prompt . $imageUrl;
@@ -211,43 +203,51 @@ class AltTextGpt extends Process implements ConfigurableModule {
               [
                 "role" => "user",
                 "content"=> [
-                  [
+                    [
                     "type"=> "text",
                     "text"=> $prompt
-                  ],
-                  [
+                    ],
+                    [
                     "type" => "image_url",
                     "image_url" => [
                        "url"=> $imageUrl
+                        ]
                     ]
-                  ]
                 ],
+              ]
+            ],
             'max_tokens' => 50
-        ]]];
+        ];
 
-        try {
-            // Send the POST request to OpenAI's API
-            $response = $client->request('POST', 'chat/completions', [
-                'json' => $payload
-            ]);
+        // API request headers
+        $http->setHeaders([
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type' => 'application/json',
+        ]);
 
-            // Get the response body
-            $responseBody = json_decode($response->getBody(), true);
+        // set data
+        $jsonData = json_encode($payload);
+        $http->setData($jsonData);
 
-            // Extract and return the generated alt text
-            if (isset($responseBody['choices'][0]['message']['content'])) {
-                return trim($responseBody['choices'][0]['message']['content']);
+        // Send POST request
+        $url = "https://api.openai.com/v1/chat/completions";
+        $response = $http->post($url);
+
+        if($response !== false) {
+            $responseData = json_decode($response, true);
+            if (isset($responseData['choices'][0]['message']['content'])) {
+                return trim($responseData['choices'][0]['message']['content']);
             } else {
-//                 return 'Failed to generate alt text.';
-                return $responseBody;
+                // Failed to generate alt text
+                throw new \Exception($responseData);
             }
-        } catch (RequestException $e) {
-            // Handle request exception
-            echo 'Request failed: ' . $e->getMessage();
-            if ($e->hasResponse()) {
-                echo "\nResponse: " . $e->getResponse()->getBody();
-            }
-            return 'Error in generating alt text.';
+        }
+        else {
+            $httpCode = $http->getHttpCode();
+             // Handle request exception
+            $msg = 'Request failed ' . $httpCode . " :" . $http->getError();
+            $this->message($msg);
+            throw new \Exception($msg);
         }
     }
 

@@ -269,6 +269,9 @@ class AltTextGpt extends Process implements ConfigurableModule {
 		// return now if form had errors
 		if(count($form->getErrors())) return;
 
+		// get domain used for site
+        $baseUrl = $this->wire('config')->urls->root;
+
         // Generate alt text for the image
         $apiKey = $form->getChildByName('api_key')->val();
         $prompt = $form->getChildByName('prompt')->val();
@@ -283,6 +286,7 @@ class AltTextGpt extends Process implements ConfigurableModule {
         if ($test_mode) {
              $this->message("Test mode is enabled.");
         }
+        $this->message("Using base domain: " . $baseUrl);
 
 		// try to add to alt text to all images
 		$pages = $this->wire()->pages->find("template!=admin");
@@ -301,7 +305,7 @@ class AltTextGpt extends Process implements ConfigurableModule {
                     $numImages += 1;
                     if ((!$test_mode && !$img->description) || ($test_mode && $img->description == "test")) {
                         $numImagesWithoutAltText += 1;
-                        $imageUrl = "https://infrastructures.us" . $img->url;
+                        $imageUrl = $baseUrl . $img->url;
                         $this->message("image url: " . $imageUrl);
                         try {
                             $altText = $this->generateAltText($apiKey, $model, $prompt, $imageUrl);

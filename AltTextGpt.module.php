@@ -81,6 +81,16 @@ class AltTextGpt extends Process implements ConfigurableModule {
 		$field->required = true;
 		$form->add($field);
 
+            /** @var InputfieldText $field */
+		$field = $modules->get('InputfieldText');
+		$field->attr('name', 'base_url');
+		$field->label = $this->_('Base URL (the urls sent to Open AI need to be publicly accessible via the internet)');
+		$field->icon = 'file-text-o';
+		$field->value = 'https://' . $this->wire('config')->httpHost;
+		$field->required = true;
+		$form->add($field);
+
+
 		/** @var InputfieldText $field */
 		$field = $modules->get('InputfieldText');
 		$field->attr('name', 'prompt');
@@ -270,10 +280,10 @@ class AltTextGpt extends Process implements ConfigurableModule {
 		if(count($form->getErrors())) return;
 
 		// get domain used for site
-        $baseUrl = $this->wire('config')->urls->root;
 
         // Generate alt text for the image
         $apiKey = $form->getChildByName('api_key')->val();
+        $baseUrl = $form->getChildByName('base_url')->val();
         $prompt = $form->getChildByName('prompt')->val();
         $prompt = $form->getChildByName('prompt')->val();
         $model = $form->getChildByName('model')->val();
@@ -286,7 +296,7 @@ class AltTextGpt extends Process implements ConfigurableModule {
         if ($test_mode) {
              $this->message("Test mode is enabled.");
         }
-        $this->message("Using base domain: " . $baseUrl);
+        $this->message("Using base url: " . $baseUrl);
 
 		// try to add to alt text to all images
 		$pages = $this->wire()->pages->find("template!=admin");
@@ -380,6 +390,14 @@ class AltTextGpt extends Process implements ConfigurableModule {
 		$f->label = $this->_('Open AI API Key');
 		$f->description = $this->_('You can get this Key from the Open AI website after making an account');
 		$f->attr('value', isset($data['ApiKey']) ? $data['ApiKey'] : $this->apiKey);
+		$inputfields->add($f);
+	
+		/** @var InputfieldText $f */
+		$f = $modules->get('InputfieldText');
+		$f->attr('name', 'BaseUrl');
+		$f->label = $this->_('Base URL');
+		$f->description = $this->_('Base URL For Fetching Images');
+		$f->attr('value', isset($data['BaseUrl']) ? $data['BaseUrl'] : $this->baseUrl);
 		$inputfields->add($f);
 
         return $inputfields;

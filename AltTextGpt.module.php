@@ -86,7 +86,7 @@ class AltTextGpt extends Process implements ConfigurableModule {
 		$field->attr('name', 'base_url');
 		$field->label = $this->_('Base URL (the urls sent to Open AI need to be publicly accessible via the internet)');
 		$field->icon = 'file-text-o';
-		$field->value = 'https://' . $this->wire('config')->httpHost;
+		$field->value = $this->BaseUrl ? $this->BaseUrl : 'https://' . $this->wire('config')->httpHost;
 		$field->required = true;
 		$form->add($field);
 
